@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Поиск книг</title>
+  <style type="text/css">
+    html {
+      background: #ffc600;
+      color:black;
+      font-size: 20px;
+      font-weight: 200;
+    }
+
+    *, *:before, *:after {
+      box-sizing: border-box;
+    }
+
+    input {
+      width: 100%;
+      padding: 20px;
+    }
+
+    a {
+      color: inherit;
+      text-decoration: none;
+    }
+    a:hover {
+      opacity: 0.5;
+    }
+
+    .form {
+      max-width: 400px;
+      margin: 50px auto;
+    }
+
+    input.input {
+      margin: 0;
+      text-align: center;
+      outline: 0;
+      border: 10px solid #F7F7F7;
+      width: 120%;
+      left: -10%;
+      position: relative;
+      top: 10px;
+      z-index: 2;
+      border-radius: 5px;
+      font-size: 30px;
+      box-shadow: 0 0 5px rgba(0, 0, 0, 0.12), inset 0 0 2px rgba(0, 0, 0, 0.19);
+    }
+
+    .list {
+      margin: 0;
+      padding: 0;
+      position: relative;
+    }
+
+    .list li {
+      background: white;
+      list-style: none;
+      border-bottom: 1px solid #D8D8D8;
+      box-shadow: 0 0 10px rgba(0, 0, 0, 0.14);
+      margin: 0;
+      padding: 20px;
+      transition: background 0.2s;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .list li > span {
+      font-size: 15px;
+    }
+   </style>
+</head>
+<body>
+  <form class="form" id="search-form">
+    <input type="text" placeholder="Какую книгу хотите найти?" class="input" id="search-input">
+    <ul class="list" id="result-list">
+    </ul>
+  </form>
+  
+  <script>
+    const  url = 'https://www.googleapis.com/books/v1/volumes?q=';
+
+    let books = [];
+    const showResult = () => {
+      let title = "",
+        authors = "", 
+        link = "",
+        html = '<li><span>Ничего не найдено</span></li>';
+
+      if (books.length > 0) {
+        html = books.map(item => {
+          if (item.volumeInfo.title) {
+            title = item.volumeInfo.title;
+          }
+          if (item.volumeInfo.authors) {
+            authors = `<span>${item.volumeInfo.authors.join(', ')}</span>`;
+          }
+          if (item.volumeInfo.infoLink) {
+            link = item.volumeInfo.infoLink;
+          }
+          return `
+            <li>
+              <a href=${link} target="blank_"><span>${title}</span></a>
+              ${authors}
+            </li>
+          `;
+        }).join('');
+      }
+
+      document.querySelector('#result-list').innerHTML = html;
+    }
+    const getBooks = (value) => {
+      if (value.length > 0) {
+        fetch(`${url}${value}`)
+          .then(response => {
+            if (response.ok) {
+              return response.json()
+            } else {
+              throw new Error('Что-то пошло не так...');
+            }
+          })
+          .then(result => {
+            books = result.items ? result.items : [];
+          })
+          .then(() => showResult())
+          .catch(error => console.error(error));
+      } else {
+        document.querySelector('#result-list').innerHTML = "";
+      }
+    }
+     
+    // document.querySelector('#search-input').addEventListener('change', (e) => {
+    //   getBooks(e.target.value)
+    // })
+    document.querySelector('#search-input').addEventListener('input', (e) => {
+      getBooks(e.target.value)
+    });
+
+
+  </script>
+</body>
+</html>
